@@ -1,9 +1,32 @@
-name: Docker Compose Actions Workflow
+name: Az login and Docker Compose Actions Workflow
 on: push
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
+
+      - name: Azure login
+        id: login
+        uses: azure/login@v1
+        with:
+          auth-type: IDENTITY
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPsSession: true
+
+      - name: Display Azure subscription details
+        run: |
+          echo "Azure Subscription ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          echo "Azure Subscription Name: $(az account show --query name --output tsv)"
+          echo "Azure Tenant ID: ${{ secrets.AZURE_TENANT_ID }}"
+          echo "Azure Client ID: ${{ secrets.AZURE_CLIENT_ID }}"
+
       - name: Build the stack
         run: docker-compose up -d
+
+      - name: Logout from Azure
+        if: success()
+        run: az logout --username ${{ steps.login.outputs.principalName }}
+
