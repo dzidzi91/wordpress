@@ -5,6 +5,14 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Install Azure CLI
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y azure-cli
+            
+      - name: Add Azure CLI to PATH
+        run: echo "##vso[task.prependpath]/usr/bin/az"
 
       - name: Azure login
         id: login
